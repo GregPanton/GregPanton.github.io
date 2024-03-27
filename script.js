@@ -136,6 +136,9 @@ document.addEventListener('DOMContentLoaded', async () =>
             case 'cameFromSize':
                 elementId = "cameFromSizeInfo";
                 break;
+            case 'pathDistance':
+                elementId = 'pathDistanceInfo';
+                break;
         }
 
         const infoElement = document.getElementById(elementId);
@@ -161,6 +164,7 @@ document.addEventListener('DOMContentLoaded', async () =>
         document.getElementById("searchTimeInfo").textContent = "";
         document.getElementById("maxOpenSetSizeInfo").textContent = "";
         document.getElementById("cameFromSizeInfo").textContent = "";
+        document.getElementById("pathDistanceInfo").textContent = "";
     }
 
     async function init()

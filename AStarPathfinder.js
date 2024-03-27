@@ -36,6 +36,17 @@ class AStarPathfinder
         return list;
     }
 
+    calculateTotalDistance(path, nodeMap) {
+        let totalDistance = 0;
+        for (let i = 0; i < path.length - 1; i++) {
+            const nodeA = nodeMap.get(path[i]);
+            const nodeB = nodeMap.get(path[i + 1]);
+            const distance = this.calculateDistance(nodeA, nodeB); 
+            totalDistance += distance;
+        }
+        return totalDistance;
+    }
+
     calculateDistance(node1, node2)
     {
         const lat1 = node1.lat, lon1 = node1.lon, lat2 = node2.lat, lon2 = node2.lon;
@@ -88,13 +99,15 @@ class AStarPathfinder
             if (current === goalId)
             {
                 const endTime = performance.now();
-                if (this.logUpdate)
-                {
-                    this.logUpdate('searchTime', `${(endTime - startTime).toFixed(2)} milliseconds`);
-                    this.logUpdate('maxOpenSetSize', maxOpenSetSize.toString());
-                    this.logUpdate('cameFromSize', cameFrom.size.toString());
-                }
-                return this.reconstructPath(cameFrom, current);
+                const finalPath = this.reconstructPath(cameFrom, current);
+                const totalDistance = this.calculateTotalDistance(finalPath, this.nodeMap); 
+                this.logUpdate("pathDistance", totalDistance.toFixed(2));
+                this.logUpdate('searchTime', `${(endTime - startTime).toFixed(2)} milliseconds`);
+                this.logUpdate('maxOpenSetSize', maxOpenSetSize.toString());
+                this.logUpdate('cameFromSize', cameFrom.size.toString());
+
+
+                return finalPath;
             }
     
             openSet.delete(current);

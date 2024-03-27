@@ -2,7 +2,6 @@ class DijkstraPathfinder
 {
     constructor(nodes, edges, logUpdateFunction)
     {
-        // Initialize nodes, edges, nodeMap, and adjacency list
         this.nodes = nodes;
         this.edges = edges;
         this.logUpdate = logUpdateFunction;
@@ -10,7 +9,6 @@ class DijkstraPathfinder
         this.adjacencyList = this.createAdjacencyList(edges);
     }
 
-    // Method to create adjacency list from edges
     createAdjacencyList(edges)
     {
         const list = new Map();
@@ -38,7 +36,19 @@ class DijkstraPathfinder
         return list;
     }
 
-    // Method to calculate distance between two nodes
+    calculateTotalDistance(path, nodeMap)
+    {
+        let totalDistance = 0;
+        for (let i = 0; i < path.length - 1; i++)
+        {
+            const nodeA = nodeMap.get(path[i]);
+            const nodeB = nodeMap.get(path[i + 1]);
+            const distance = this.calculateDistance(nodeA, nodeB); 
+            totalDistance += distance;
+        }
+        return totalDistance;
+    }
+
     calculateDistance(node1, node2)
     {
         const lat1 = node1.lat, lon1 = node1.lon, lat2 = node2.lat, lon2 = node2.lon;
@@ -50,11 +60,26 @@ class DijkstraPathfinder
         dist = Math.acos(dist);
         dist = dist * 180 / Math.PI;
         dist = dist * 60 * 1.1515;
-        dist = dist * 1.609344;
-        return dist;
+        dist = dist * 1.609344; 
+    
+        const elevationDifference = node2.elevation - node1.elevation;
+        const elevationCost = this.calculateElevationCost(elevationDifference);
+    
+        return dist + elevationCost; 
+    }
+    
+    calculateElevationCost(elevationDifference)
+    {
+        if (elevationDifference > 0)
+        {
+            return elevationDifference * 0.01; 
+        }
+        else
+        {
+            return elevationDifference * -0.005; 
+        }
     }
 
-    // Method to find shortest path using Dijkstra's algorithm
     findPath(startId, goalId)
     {
         const startTime = performance.now();
@@ -76,13 +101,16 @@ class DijkstraPathfinder
             if (current === goalId)
             {
                 const endTime = performance.now();
-                if (this.logUpdate)
-                {
-                    this.logUpdate('searchTime', `${(endTime - startTime).toFixed(2)} milliseconds`);
-                    this.logUpdate('maxOpenSetSize', maxOpenSetSize.toString());
-                    this.logUpdate('cameFromSize', cameFrom.size.toString());
-                }
-                return this.reconstructPath(cameFrom, current);
+
+                const finalPath = this.reconstructPath(cameFrom, current);
+                const totalDistance = this.calculateTotalDistance(finalPath, this.nodeMap); 
+
+                this.logUpdate("pathDistance", totalDistance.toFixed(2));
+                this.logUpdate('searchTime', `${(endTime - startTime).toFixed(2)} milliseconds`);
+                this.logUpdate('maxOpenSetSize', maxOpenSetSize.toString());
+                this.logUpdate('cameFromSize', cameFrom.size.toString());
+                
+                return finalPath;
             }
 
             openSet.delete(current);
@@ -113,7 +141,6 @@ class DijkstraPathfinder
         return [];
     }
 
-    // Method to reconstruct path from start to goal
     reconstructPath(cameFrom, current)
     {
         const totalPath = [current];
